@@ -1,0 +1,104 @@
+project_name: nomad_finetune
+run_name: nomad_finetune
+
+# ─── Wandb ────────────────────────────────────────────────────────────────────
+use_wandb: False          # set True and fill wandb_entity to log runs
+# wandb_entity: your_wandb_username
+
+# ─── Training setup ───────────────────────────────────────────────────────────
+train: True
+batch_size: 64            # lower than 256 default — safer for single GPU finetune
+eval_batch_size: 64
+epochs: 30
+gpu_ids: [0]
+num_workers: 0         # keep 0 on Windows; set to 4+ on AWS Linux
+lr: 5e-5                  # lower LR for fine-tuning from pretrained weights
+optimizer: adamw
+clipping: False
+max_norm: 1.
+scheduler: "cosine"
+warmup: True
+warmup_epochs: 3
+cyclic_period: 10
+plateau_patience: 3
+plateau_factor: 0.5
+seed: 42
+
+# ─── Load pretrained NoMaD checkpoint ─────────────────────────────────────────
+# Download nomad.pth from:
+#   https://drive.google.com/drive/folders/1a9yWR2iooXFAqjQHetz263--4_2FFggg
+# Place it at:  train/logs/nomad_pretrained/nomad/latest.pth
+# Then uncomment the line below:
+# load_run: nomad_pretrained/nomad
+
+# ─── Model params (must match the pretrained checkpoint) ──────────────────────
+model_type: nomad
+vision_encoder: nomad_vint
+encoding_size: 256
+obs_encoder: efficientnet-b0
+attn_unet: False
+cond_predict_scale: False
+mha_num_attention_heads: 4
+mha_num_attention_layers: 4
+mha_ff_dim_factor: 4
+down_dims: [64, 128, 256]
+
+# ─── Diffusion params ─────────────────────────────────────────────────────────
+num_diffusion_iters: 10
+
+# ─── Goal masking ─────────────────────────────────────────────────────────────
+goal_mask_prob: 0.5       # 0.5 = equal chance of navigation vs exploration mode
+
+# ─── Action space ─────────────────────────────────────────────────────────────
+normalize: True
+goal_type: image
+len_traj_pred: 8
+learn_angle: False
+
+# ─── Context ──────────────────────────────────────────────────────────────────
+context_type: temporal
+context_size: 3
+alpha: 1e-4
+
+# ─── Distance bounds ──────────────────────────────────────────────────────────
+distance:
+  min_dist_cat: 0
+  max_dist_cat: 20
+action:
+  min_dist_cat: 3
+  max_dist_cat: 20
+
+# ─── Image size ───────────────────────────────────────────────────────────────
+image_size: [96, 96]      # width, height — must match pretrained model
+
+# ─── Your custom dataset ──────────────────────────────────────────────────────
+# Replace the placeholder paths below with your actual paths on the AWS instance.
+# Dataset folder structure expected:
+#   <data_folder>/
+#     <traj_name>/
+#       0.jpg, 1.jpg, ..., N.jpg
+#       traj_data.pkl  →  {"position": np.ndarray [T,2], "yaw": np.ndarray [T,]}
+#
+# After running process_bags.py and data_split.py, register your dataset in:
+#   train/vint_train/data/data_config.yaml
+#     your_dataset:
+#         metric_waypoints_distance: <avg_meters_between_waypoints>
+
+datasets:
+  custom_dataset:
+    data_folder: /home/useradmin/bala/visualnav-transformer/datasets
+    train: /home/useradmin/bala/visualnav-transformer/vint_train/data/data_splits/custom_dataset/train/
+    test: /home/useradmin/bala/visualnav-transformer/vint_train/data/data_splits/custom_dataset/test/
+
+    end_slack: 0
+    goals_per_obs: 1
+    negative_mining: True
+
+# ─── Logging ──────────────────────────────────────────────────────────────────
+print_log_freq: 100       # iterations
+image_log_freq: 500       # iterations
+num_images_log: 8
+pairwise_test_freq: 0
+wandb_log_freq: 10
+eval_fraction: 0.25
+eval_freq: 1

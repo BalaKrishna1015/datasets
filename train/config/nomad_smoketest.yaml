@@ -1,0 +1,69 @@
+# Smoke test config — runs 1 epoch with minimal settings to validate the pipeline.
+# Use this on CPU before moving to AWS. Full training uses nomad_finetune.yaml.
+
+project_name: nomad_smoketest
+run_name: nomad_smoketest
+
+use_wandb: False
+train: True
+batch_size: 4          # tiny batch — fast on CPU
+eval_batch_size: 4
+epochs: 1              # just 1 epoch
+gpu_ids: [0]
+num_workers: 0         # 0 = no multiprocessing (safer on Windows)
+lr: 5e-5
+optimizer: adamw
+clipping: False
+max_norm: 1.
+scheduler: "cosine"
+warmup: True
+warmup_epochs: 1
+seed: 42
+
+model_type: nomad
+vision_encoder: nomad_vint
+encoding_size: 256
+obs_encoder: efficientnet-b0
+attn_unet: False
+cond_predict_scale: False
+mha_num_attention_heads: 4
+mha_num_attention_layers: 4
+mha_ff_dim_factor: 4
+down_dims: [64, 128, 256]
+
+num_diffusion_iters: 10
+goal_mask_prob: 0.5
+normalize: True
+goal_type: image
+len_traj_pred: 8
+learn_angle: False
+
+context_type: temporal
+context_size: 3
+alpha: 1e-4
+
+distance:
+  min_dist_cat: 0
+  max_dist_cat: 20
+action:
+  min_dist_cat: 3
+  max_dist_cat: 20
+
+image_size: [96, 96]
+
+datasets:
+  custom_dataset:
+    data_folder: c:/Users/aryan/nomad/visualnav-transformer/datasets
+    train: c:/Users/aryan/nomad/visualnav-transformer/train/vint_train/data/data_splits/custom_dataset/train/
+    test: c:/Users/aryan/nomad/visualnav-transformer/train/vint_train/data/data_splits/custom_dataset/test/
+    end_slack: 0
+    goals_per_obs: 1
+    negative_mining: True
+
+print_log_freq: 10     # print every 10 batches
+image_log_freq: 0      # disable image logging
+num_images_log: 0
+pairwise_test_freq: 0
+wandb_log_freq: 10
+eval_fraction: 0.25
+eval_freq: 1
