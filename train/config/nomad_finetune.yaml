@@ -9,7 +9,7 @@ use_wandb: False          # set True and fill wandb_entity to log runs
 train: True
 batch_size: 64            # lower than 256 default — safer for single GPU finetune
 eval_batch_size: 64
-epochs: 30
+epochs: 12
 gpu_ids: [0]
 num_workers: 0         # keep 0 on Windows; set to 4+ on AWS Linux
 lr: 5e-5                  # lower LR for fine-tuning from pretrained weights
@@ -29,7 +29,7 @@ seed: 42
 #   https://drive.google.com/drive/folders/1a9yWR2iooXFAqjQHetz263--4_2FFggg
 # Place it at:  train/logs/nomad_pretrained/nomad/latest.pth
 # Then uncomment the line below:
-# load_run: nomad_pretrained/nomad
+load_run: nomad_pretrained/nomad
 
 # ─── Model params (must match the pretrained checkpoint) ──────────────────────
 model_type: nomad
